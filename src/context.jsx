@@ -4,6 +4,17 @@ const AppContext = React.createContext();
 const allMealsUrl = 'https://www.themealdb.com/api/json/v1/1/search.php?s=';
 const randomMealUrl = 'https://www.themealdb.com/api/json/v1/1/random.php';
 
+const getFavoritesFromLocalStorage = () => {
+    let favorites = localStorage.getItem('favorites');
+    if (favorites) {
+        favorites = JSON.parse(localStorage.getItem('favorites'));
+    } else {
+        favorites = [];
+    }
+    return favorites;
+};
+
+
 function AppProvider({ children }) {
 
     const [meals, setMeals] = useState([]);
@@ -11,6 +22,22 @@ function AppProvider({ children }) {
     const [searchTerm, setSearchTerm] = useState('');
     const [showModal, setShowModal] = useState(false);
     const [selectedMeal, setSelectedMeal] = useState(null);
+    const [favorites, setFavorites] = useState(getFavoritesFromLocalStorage());
+
+    const addToFavorites = (idMeal) => {
+        const meal = meals.find((meal) => meal.idMeal === idMeal);
+        const alreadyFavorite = favorites.find((meal) => meal.idMeal === idMeal);
+        if (alreadyFavorite) return;
+        const updatedFavorite = [...favorites, meal];
+        setFavorites(updatedFavorite);
+        localStorage.setItem('favorites', JSON.stringify(updatedFavorite));
+    };
+
+    const removeFromFavorites = (idMeal) => {
+        const updatedFavorite = favorites.filter((meal) => meal.idMeal !== idMeal);
+        setFavorites(updatedFavorite);
+        localStorage.setItem('favorites', JSON.stringify(updatedFavorite));
+    };
 
     function closeModal() {
         setShowModal(false);
@@ -54,7 +81,7 @@ function AppProvider({ children }) {
     }, [searchTerm]);
 
     return (
-        <AppContext.Provider value={{ loading, meals, setSearchTerm, fetchRandomMeal, showModal, selectMeal, selectedMeal, closeModal }} >
+        <AppContext.Provider value={{ loading, meals, setSearchTerm, fetchRandomMeal, showModal, selectMeal, selectedMeal, closeModal, favorites, addToFavorites, removeFromFavorites }} >
             {children}
         </AppContext.Provider >
     );
